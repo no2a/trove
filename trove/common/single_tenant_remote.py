@@ -19,7 +19,7 @@ from trove.common.remote import normalize_url
 
 from cinderclient.v2 import client as CinderClient
 from neutronclient.v2_0 import client as NeutronClient
-from novaclient.v1_1.client import Client as NovaClient
+from novaclient.client import Client as NovaClient
 
 CONF = cfg.CONF
 
@@ -50,26 +50,31 @@ remote_neutron_client = \
 """
 
 
-def nova_client_trove_admin(context, region_name=None, compute_url=None):
+def nova_client_trove_admin(context, region_name=None, password=None):
     """
     Returns a nova client object with the trove admin credentials
-    :param context: original context from user request
-    :type context: trove.common.context.TroveContext
+
+    All parameters are ignored since all the required informations are
+    taken from CONF. The parameters are there just to be able to replace
+    trove.common.nova_client.
+
+    :param context
+    :param region_name
+    :param password
     :return novaclient: novaclient with trove admin credentials
-    :rtype: novaclient.v1_1.client.Client
+    :rtype: novaclient.Client
     """
 
-    compute_url = compute_url or CONF.nova_compute_url
-
-    client = NovaClient(CONF.nova_proxy_admin_user,
-                        CONF.nova_proxy_admin_pass,
-                        CONF.nova_proxy_admin_tenant_name,
+    client = NovaClient(CONF.nova_client_version,
+                        username=CONF.nova_proxy_admin_user,
+                        password=CONF.nova_proxy_admin_pass,
+                        project_name=CONF.nova_proxy_admin_tenant_name,
                         auth_url=CONF.trove_auth_url,
                         service_type=CONF.nova_compute_service_type,
-                        region_name=region_name or CONF.os_region_name,
+                        region_name=CONF.os_region_name,
                         insecure=CONF.nova_api_insecure)
 
-    if compute_url and CONF.nova_proxy_admin_tenant_id:
+    if CONF.nova_compute_url and CONF.nova_proxy_admin_tenant_id:
         client.client.endpoint_override = "%s/%s/" % (
             normalize_url(compute_url),
             CONF.nova_proxy_admin_tenant_id)
@@ -77,11 +82,16 @@ def nova_client_trove_admin(context, region_name=None, compute_url=None):
     return client
 
 
-def cinder_client_trove_admin(context=None):
+def cinder_client_trove_admin(context, region_name=None):
     """
     Returns a cinder client object with the trove admin credentials
-    :param context: original context from user request
-    :type context: trove.common.context.TroveContext
+
+    All parameters are ignored since all the required informations are
+    taken from CONF. The parameters are there just to be able to replace
+    trove.common.cinder_client.
+
+    :param context
+    :param region_name
     :return cinderclient: cinderclient with trove admin credentials
     """
     client = CinderClient.Client(CONF.nova_proxy_admin_user,
@@ -99,11 +109,16 @@ def cinder_client_trove_admin(context=None):
     return client
 
 
-def neutron_client_trove_admin(context=None):
+def neutron_client_trove_admin(context, region_name=None):
     """
     Returns a neutron client object with the trove admin credentials
-    :param context: original context from user request
-    :type context: trove.common.context.TroveContext
+
+    All parameters are ignored since all the required informations are
+    taken from CONF. The parameters are there just to be able to replace
+    trove.common.neutron_client.
+
+    :param context
+    :param region_name
     :return neutronclient: neutronclient with trove admin credentials
     """
     client = NeutronClient.Client(
